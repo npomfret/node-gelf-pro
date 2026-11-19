@@ -1,12 +1,11 @@
-## Running commands
+---
+name: investigate-failure
+description: Finding why something fails. Use for bugs, crashes, errors, wrong output, regressions, flaky tests or builds, "why does this happen" and "it stopped working", before changing code to fix it. Also for collecting audit logs from apps, servers, devices or CI, and for writing or updating a troubleshooting guide. Not for planned feature work.
+---
 
-Run commands yourself unless they require the user's login, password, sudo, device or installation action. Load the `scripting` skill before writing a script the project keeps.
+# Investigate failure
 
-- Before creating command-line automation, inspect the project's maintained script catalogue and `tmp/ad-hoc-scripts/` for an existing operation to reuse or extend.
-- Do not embed a shell program in a complex command line. For multi-step work involving control flow, substantial quoting, orchestration or repeated operations, write a named executable script under `tmp/ad-hoc-scripts/` and run it. This applies to commands agents execute themselves as well as commands handed to the user. Give the script a clear purpose and usage so another agent can discover and reuse it.
-- When the user must run a command, give them one short command. For anything multiline, chained or longer than about 80 characters, write an executable `tmp/ad-hoc-scripts/<purpose>.sh` with `#!/usr/bin/env bash`, `set -euo pipefail`, a purpose comment and logging under `tmp/logs/`. Show it, ask them to run `! tmp/ad-hoc-scripts/<purpose>.sh`, then read its log.
-- Keep lengthy build, test, install and data output in `tmp/logs/`. Read relevant portions and report the useful lines with the log path. Do not enable verbose/debug output merely to watch a run.
-- Large command output consumes agent context and token quota. Keep it in audit-log files and use targeted searches such as `rg` or `grep`, followed by bounded excerpts, to find the evidence needed. Report concise findings and the audit-log path. Do not load or paste entire large audit logs into the conversation.
+For evidence collection or reproduction that can run apart from the parent task, delegate to `failure-investigator`; the parent still applies the standards to the fix.
 
 ### Troubleshooting and audit-log collection
 
@@ -19,3 +18,5 @@ Every project must have a maintained, discoverable troubleshooting guide, provid
 - For TeamCity, use the shared TeamCity tooling to obtain build audit logs and downloadable test artifacts. A project without a particular deployment, device or CI integration needs no invented collection target for it.
 - Collection must be non-interactive for routine authorised access, bound network operations with explicit timeouts, report missing access or unavailable sources clearly, and retain successfully collected evidence if another source fails. Apply the scripting, permissions and audit-log redaction standards.
 - When investigating, collect evidence, reproduce the failure and test one explicit hypothesis at a time. Remove unsuccessful experiments before trying another. Update the guide when the investigation establishes a durable diagnostic procedure or failure pattern.
+
+*Generated from `npomfret/agent-standards`. Edit the standard there, not this copy.*

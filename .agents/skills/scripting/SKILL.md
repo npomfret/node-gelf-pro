@@ -1,9 +1,7 @@
 ---
 name: scripting
-description: Project conventions for scripts, command targets and CI steps. Read before writing, changing or reviewing shell, Python, Node or other command-line tooling.
+description: Writing or changing scripts and command-line tooling, kept or ad hoc. Use for shell, Python or Node scripts, npm or make targets, release and maintenance scripts, flags, --help, dry-run, exit codes, audit-log output, locks and selftests, including "automate this" and "write a script to". Not for running an existing command or for application code.
 ---
-
-## Scripting
 
 Keep command-line tooling predictable for people, agents and CI.
 

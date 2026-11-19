@@ -1,4 +1,9 @@
-## Test timeouts
+---
+name: test-design
+description: Writing, changing or running automated tests. Use for adding coverage, unit, integration or end-to-end tests, test data and builders, fakes and controlled clocks, drivers and page objects, async waits and polling, test timeouts and budgets, flaky or slow tests, and CI failure artifacts, including "cover this", "tests time out" and "increase the timeout". Browser and iOS UI tests also use their own skill. Not for UI driver specifics, which those skills add.
+---
+
+# Test design
 
 Use short, explicit limits so slow or stalled work fails promptly. Run local builds and tests one at a time across agents, with one test worker; wait for any test run you control to finish before starting another.
 
@@ -35,16 +40,6 @@ The starting check may simply establish that the expected final condition is not
 
 Use the legitimate public behaviour or driver interface to check state. Keep UI synchronisation and polling inside the driver. Do not expose internals for assertions. Choose preconditions appropriate to unchanged-state and idempotency scenarios, where preserving an existing state is itself the required behaviour.
 
-### Test-data builders
-
-Always use builders to construct domain objects in tests. Builders hide incidental data construction while keeping scenario-defining inputs visible. They produce valid objects by default with randomised field values within the valid domain. Each test must explicitly specify all fields necessary to make its scenario pass, and only those fields.
-
-- Randomise incidental fields so tests cannot silently depend on convenient fixed defaults. Supply randomness explicitly through a seedable generator. Record the seed and test identity in failure evidence so the same generated data can be reproduced.
-- Tests explicitly fix only fields that establish the scenario's necessary preconditions or expected outcomes. Every override must earn its place. Removing a necessary override should invalidate the intended scenario or cause its meaningful assertions to fail. Remove overrides that do not affect the scenario.
-- Randomised defaults help reveal an omitted necessary override but cannot guarantee detection on every run. Preserve valid domain relationships and keep generated values within the intended scenario's incidental variation so randomness does not introduce unrelated invalid cases or uncontrolled flakiness.
-- Construct malformed input deliberately at the boundary under test using explicit variations. Do not weaken production types or generate invalid objects accidentally.
-- Give each test independent builder state and data. Distinguish in-memory construction from operations that persist data or perform other external effects.
-
 ### Test failure evidence
 
 Prepare for failures whose cause is initially unclear. Applications audit meaningful user actions, API calls and state transitions. Tests provide diagnostic errors, and shared waiting infrastructure records expected conditions, elapsed time, limits and outcomes.
@@ -55,3 +50,29 @@ Prepare for failures whose cause is initially unclear. Applications audit meanin
 - Failure messages identify the operation, expected condition and actual observed state. Wait failures also report elapsed time and the configured limit. Preserve original errors and stacks.
 - Retain wait timing records for successful and failed tests across builds so duration trends and timeout frequency can be analysed. Successful tests do not require routine screenshots or extensive diagnostic artifacts.
 - Keep collection in shared test infrastructure and drivers so individual scenarios cannot accidentally omit evidence. Capture available failure evidence before cleanup destroys it, and preserve the original test failure if evidence collection also fails. Apply the auditing redaction rules to published artifacts.
+### Test-data builders
+
+Always use builders to construct domain objects in tests. Builders hide incidental data construction while keeping scenario-defining inputs visible. They produce valid objects by default with randomised field values within the valid domain. Each test must explicitly specify all fields necessary to make its scenario pass, and only those fields.
+
+- Randomise incidental fields so tests cannot silently depend on convenient fixed defaults. Supply randomness explicitly through a seedable generator. Record the seed and test identity in failure evidence so the same generated data can be reproduced.
+- Tests explicitly fix only fields that establish the scenario's necessary preconditions or expected outcomes. Every override must earn its place. Removing a necessary override should invalidate the intended scenario or cause its meaningful assertions to fail. Remove overrides that do not affect the scenario.
+- Randomised defaults help reveal an omitted necessary override but cannot guarantee detection on every run. Preserve valid domain relationships and keep generated values within the intended scenario's incidental variation so randomness does not introduce unrelated invalid cases or uncontrolled flakiness.
+- Construct malformed input deliberately at the boundary under test using explicit variations. Do not weaken production types or generate invalid objects accidentally.
+- Give each test independent builder state and data. Distinguish in-memory construction from operations that persist data or perform other external effects.
+### Test wait timing
+
+Every asynchronous test wait is audited by the shared driver infrastructure, including framework assertions and event waits. Emit a fixed event label plus single-line JSON on success, timeout, cancellation and unexpected error. Record stable test/operation identity, expected condition, outcome, elapsed milliseconds and timeout milliseconds. Add attempt count when available and safe last-observed state on failure. Use a monotonic clock for durations. Keep the original error and its stack when a wait fails.
+
+Publish these records with TeamCity build logs so agents can compare durations and timeout frequency across builds and justify calibrated limits. Record successful waits as well as failures, without per-poll log noise. Individual test authors must not have to add timing logs themselves.
+### Application and browser evidence
+
+Audit meaningful user actions, API calls and state transitions so failures can be reconstructed. Browser application logs follow the same contract as server logs, with timestamp, severity, fixed event label and structured JSON data on one line. Preserve errors and diagnostic context.
+
+Shared test infrastructure collects application/server logs, browser console logs, test errors and wait timing records into downloadable CI artifacts when tests fail. UI failures include screenshots, and multi-participant tests include logs and screenshots for each user, browser, context or device with clear participant identity. Publish available evidence even when the test step fails and capture it before cleanup. Preserve the original test failure if artifact collection also fails.
+
+Retain timing records from successful and failed waits across builds. Routine screenshots and extensive diagnostic artifacts are unnecessary for successful tests. Apply the redaction rules to all published evidence.
+### Choose the behaviour's test boundary
+
+Keep UI layers thin, with layout and rendering bound to application-owned model state and user interactions forwarded to its operations. Move decisions, validation, calculations, workflow and state transitions into UI-independent code with injected collaborators. Unit-test that behaviour in memory. Focus UI-driven coverage on rendering, bindings and platform interactions that require a real UI. Apply this across web and native frameworks so ordinary behavioural coverage can run without a browser, simulator or desktop session.
+
+*Generated from `npomfret/agent-standards`. Edit the standard there, not this copy.*

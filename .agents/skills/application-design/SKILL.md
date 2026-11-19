@@ -1,7 +1,13 @@
-## State and dependencies
+---
+name: application-design
+description: Structure of application code. Use when adding or changing behaviour in classes, modules, services or functions, refactoring, introducing an external dependency (network, storage, clock, randomness), deciding where logic lives, or making code unit-testable, even if design is not mentioned. Covers injection, composition root, immutability, encapsulation, domain types and globals. Not for UI markup, SQL, scripts or async workflow design.
+---
+
+# Application design
+
+Use with `stateful-workflows` when behaviour changes over time, `runtime-configuration` when settings are read, and `ui-implementation` for screens.
 
 Construct dependencies at the program's entry point and pass each consumer the specific collaborators and configuration it uses. Static application state is not allowed.
-
 ### Prefer
 
 - Required constructor parameters for classes and explicit parameters for functions. Constructed objects are ready to use; per-call data belongs in method arguments.
@@ -9,7 +15,6 @@ Construct dependencies at the program's entry point and pass each consumer the s
 - Runtime-owned instances with a defined lifetime, shared by passing references. Use an injected narrow factory when construction depends on later request/session data.
 - Immutable values and fields, including owned collections and nested data. Use `const` in JavaScript/TypeScript, `let` in Swift, or the language's equivalent; an immutable reference alone does not protect its contents.
 - Minimal private mutable state with a behavioral reason, one owner and a validity/invalidation policy. Keep transitions consistent across failure, cancellation and asynchronous work; prevent stale work from overwriting newer state.
-
 ### Encapsulate state and behaviour
 
 Keep state together with the behaviour that queries it, changes it and preserves its invariants. Keep representation and internal workflow private, especially where state is mutable. Let objects tell callers meaningful outcomes through intent-based operations and immutable observations.
@@ -21,18 +26,6 @@ Keep state together with the behaviour that queries it, changes it and preserves
 - Helpers are often a sign that an object lacks behaviour it should own. Inspect the state and invariants involved and move behaviour to its cohesive owner where appropriate.
 - More than four instance fields is a design smell that triggers a responsibility review. Ask whether the class combines distinct concepts and whether state and behaviour should be separated into two cohesive encapsulations. Use this as a diagnostic heuristic and split according to real responsibilities.
 - There is no upper limit on the number of behaviour methods a class may have. Many cohesive operations can belong to one abstraction. Review complexity through the amount of owned state and the relationships and invariants it must maintain.
-
-### State machines, concurrency and cancellation
-
-Model stateful and asynchronous workflows with explicit states, permitted transitions and one owner responsible for enforcing them. Use the language's types to represent valid states and prevent invalid combinations. Keep state machines visible in the model and its operations so concurrency rules can be understood and tested.
-
-- Prefer immutable values and stateless behaviour. Introduce mutable in-memory state only for a concrete requirement, following the immutability rules. Keep required workflow state private to its owner.
-- Define the events and conditions that permit each transition, including success, failure, cancellation and partial completion. Keep related changes consistent and prevent callers from observing invalid intermediate state.
-- Define how overlapping operations interact. Identify which operation owns a result and reject stale completions that would overwrite a newer state. Cancellation must leave a valid state and prevent cancelled work from later applying an obsolete transition.
-- State whether each operation is idempotent. Repeated requests or deliveries must preserve that contract. Retry only under an established policy, with duplicate protection where repeating an operation could repeat its effects.
-- Where workflow state is persisted, commit the transition and associated database changes transactionally. Use the database's concurrency controls and constraints to prevent conflicting updates. A transaction alone does not make an operation idempotent.
-- Test meaningful transitions and relevant overlaps, duplicate delivery, late completion, failure and cancellation through public behaviour with controlled collaborators.
-
 ### Immutability by default
 
 Immutability is mandatory by default. Initialise fields during construction and use the language's readonly, final, let or equivalent mechanism to prevent reassignment. Injected collaborator references and supplied configuration must remain immutable for the consumer's lifetime.
@@ -40,10 +33,7 @@ Immutability is mandatory by default. Initialise fields during construction and 
 - Prefer immutable domain values and return a new value when data changes. Owned collections and nested data must also be protected from mutation through constructor inputs, aliases and returned references. Use immutable representations, defensive copies or appropriately owned read-only views. A read-only view alone cannot prevent mutation by another holder of its underlying data.
 - Every mutable field requires a concrete behavioural reason, one explicit owner, a defined lifetime and valid transitions. Keep mutable state minimal and private. Derive values where possible instead of storing redundant state that can drift.
 - Keep related state changes consistent across failure, cancellation and partial completion. Control concurrent access and preserve invariants across asynchronous suspension points. Prevent stale work from overwriting newer state.
-- Caches require an explicit validity and invalidation policy. Mutation for convenient wiring, later initialisation or test setup is forbidden.
-- Every cache must be configurable through runtime-supplied configuration, including whether it is enabled. Each project decides its caching policy and relevant freshness, expiry and capacity settings. Support disabling caching for environments such as development. Read and validate the supplied configuration at the entry or composition boundary and inject the relevant immutable settings into the cache owner. Cache behaviour must not discover global configuration or hard-code an environment-specific policy.
 - Tests construct independent instances and exercise meaningful transitions through public behaviour. Do not expose mutable internals or add general setters to make tests convenient.
-
 ### Use strong domain types at boundaries
 
 In type-safe languages, use the type system to express domain meaning and enforce valid states throughout the application. Every component has boundaries where values enter or leave its responsibility. Validate and encapsulate incoming values at those boundaries, then carry the resulting domain types through internal interfaces.
@@ -54,17 +44,6 @@ In type-safe languages, use the type system to express domain meaning and enforc
 - Translate domain values into transport or storage representations when crossing an outgoing boundary. At the receiving boundary, validate and reconstruct domain values before invoking application behaviour. A typed sender does not establish the validity of received data.
 - Construct valid domain objects from database results before passing them into application behaviour. Apply the same discipline to UI input and external API payloads.
 - Preserve domain types across collaborators and call chains. Do not discard their guarantees through loose shapes, unchecked casts or broad primitive parameters. Runtime validation establishes trust in external data, and the type system carries that guarantee inward.
-
-### Explicit file-based configuration
-
-Projects must coexist independently on the same machine. Application and script configuration must never depend on environment variables, dotenv files, machine-wide settings, a user's active login or an implicitly selected account or cloud project.
-
-- Supply configuration files explicitly through one or more command-line arguments at the application or launcher boundary. Apply this to server, client and native application projects. Validate the selected files once and construct typed immutable configuration at the entry or composition boundary.
-- Select project identity, endpoints, accounts and credentials from those supplied files. For external authentication, explicitly supply the appropriate credential file, such as a service-account file where supported. Do not fall back to the machine's logged-in user, active project, environment variables or ambient credential discovery.
-- Inject each consumer's required configuration and constructed collaborators. Behaviour code must not load configuration files, read environment variables or select credentials for itself.
-- Pass file paths as arguments. Keep secret contents out of command arguments, source, console output and audit logs, following the project's established secret-storage policy.
-- Fail startup with a precise error when required configuration is absent, invalid or inconsistent. Unit tests supply typed configuration directly in memory and test file loading separately at its boundary.
-
 ### Separate construction from behaviour
 
 Separating construction from behaviour is mandatory. The composition root assembles the application near its entry point. It reads and validates configuration, selects implementations, constructs collaborators and owns their lifetimes. Behaviour code receives ready-to-use collaborators and performs application work through their interfaces.
@@ -75,7 +54,6 @@ Separating construction from behaviour is mandatory. The composition root assemb
 - Apply this separation at each relevant boundary. A constructed object can receive an injected factory for a later scope while keeping its own behaviour independent of construction details.
 - Keep behaviour directly constructible in unit tests with in-memory collaborators. Tests must be able to exercise it without starting the application, loading production configuration or contacting external systems.
 - Do not construct external dependencies inside behaviour code, resolve them through a service locator or pass a general dependency container inward. Creating ordinary local values and domain objects remains valid.
-
 ### Design for fast, reliable unit tests
 
 Abstract external capabilities as soon as they are introduced. Assume each dependency will need replacing soon and make that replacement local to its adapter and construction. Identify capabilities that introduce latency, shared state or failures outside the code's control, including capabilities built into the language or platform. The examples below are illustrative and apply only where the project uses the capability.
@@ -88,7 +66,6 @@ Abstract external capabilities as soon as they are introduced. Assume each depen
 - Judge the boundary by what consumers no longer need to know and how much behaviour can be tested quickly and reliably in memory. Replacing a provider should primarily change its adapter, wiring and configuration.
 
 For example, a time-dependent operation can receive a clock or scheduler whose test substitute advances simulated time or triggers callbacks immediately. A database adapter can expose a few application operations from a much larger driver API and enforce transactions where the application requires them. These illustrate controllability, a reduced interface and encapsulated policy.
-
 ### Avoid
 
 - Singletons, module/static service instances or configuration, global accessors, service locators and global configure/reset lifecycles.
@@ -99,3 +76,5 @@ For example, a time-dependent operation can receive a clock or scheduler whose t
 Immutable constants, stateless functions and deterministic value construction are allowed; service instances and runtime configuration are not constants. If a change would require new static application state, explain the missing construction boundary instead of adding a stopgap.
 
 Tests construct units with in-memory configuration and fakes. Independent instances must coexist without interference. Exercise meaningful state transitions through behavior; do not supply dependencies by patching modules, changing the environment or resetting globals.
+
+*Generated from `npomfret/agent-standards`. Edit the standard there, not this copy.*
