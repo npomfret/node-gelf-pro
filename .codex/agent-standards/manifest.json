@@ -93,13 +93,13 @@
     },
     ".codex/agent-standards/plugins/testing/.claude-plugin/plugin.json": {
       "source": "plugin:testing@npomfret/.claude-plugin/plugin.json",
-      "sha256": "6806b7cd2088b8a2963c8d341da8df75ed38f16a0febf0295afaf4103002948d",
+      "sha256": "f5e3575f9f134a82ee5bdb3ebafddf48e3e371dff43b8d29bfbc9b836e90fc56",
       "link": false,
       "executable": false
     },
     ".codex/agent-standards/plugins/testing/skills/test-design/SKILL.md": {
       "source": "plugin:testing@npomfret/skills/test-design/SKILL.md",
-      "sha256": "55d82544517143c7e165ba4d2fc20ba9de50ffebea26156dcf6cd2dcdf006a2f",
+      "sha256": "14deb09d18dc33d8a2f3361266616213522ac0d03059ad870a819d078b683280",
       "link": false,
       "executable": false
     },
@@ -171,7 +171,7 @@
     },
     ".codex/hooks.json": {
       "source": "templates/codex-hooks.py",
-      "sha256": "12ec28fa08af625571a93101999a433e6a9f046a4110290a6ae241abcccf28fc",
+      "sha256": "ec8d68caaed7924b633a14f184dd9910e72ec728667904303d6b7289a7287018",
       "link": false,
       "executable": false
     },
